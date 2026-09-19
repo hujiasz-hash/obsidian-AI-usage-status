@@ -125,7 +125,7 @@
 }
 .uh-custom-card {
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 3px;
+	border-radius: 6px;
 	padding: 0 10px;
 	margin: 6px 0;
 }
@@ -134,23 +134,15 @@
 .uh-card {
 	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 3px;
+	border-radius: 6px;
 	padding: 0 18px;
 	margin: 6px 0;
 }
-/* 覆盖主题的条目独立色块，改为灰色横线分隔（原生风格） */
 .uh-card .setting-item {
-	border: none !important;
-	background: transparent !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	margin: 0 !important;
+	border-top: none;
 	padding: 4px 10px;
 	display: flex;
 	align-items: center;
-}
-.uh-card .setting-item + .setting-item {
-	border-top: 1px solid var(--background-modifier-border) !important;
 }
 .uh-card-title {
 	display: flex;

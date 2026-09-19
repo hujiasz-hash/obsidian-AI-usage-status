@@ -140,11 +140,11 @@
 }
 .uh-card .setting-item {
 	border-top: none;
-	padding: 4px 10px;
+	padding: 2px 10px;
 	display: flex;
 	align-items: center;
-	border-radius: 4px !important;
-	margin: 2px 0 !important;
+	border-radius: 5px !important;
+	margin: 4px 0 !important;
 }
 .uh-card-title {
 	display: flex;

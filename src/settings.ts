@@ -107,6 +107,20 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		return card;
 	}
 
+	/**
+	 * 统一条目构造：名字 + 控件保持单行；说明文字放入名字后的问号 tooltip
+	 * （代替 setDesc，保证条目高度低且统一）
+	 */
+	private row(card: HTMLElement, name: string, desc?: string): Setting {
+		const s = new Setting(card).setName(name);
+		if (desc) {
+			const help = s.nameEl.createSpan({ text: "?", cls: "uh-help" });
+			help.setAttr("aria-label", desc);
+			help.setAttr("aria-label-position", "top");
+		}
+		return s;
+	}
+
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
@@ -114,8 +128,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		// ─────────────────── GLM ───────────────────
 		const glmCard = this.card(containerEl, "GLM Coding Plan", "glm");
 
-		new Setting(glmCard)
-			.setName("状态栏显示")
+		this.row(glmCard, "状态栏显示")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.showGlm).onChange(async (v) => {
 					this.plugin.settings.showGlm = v;
@@ -124,8 +137,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(glmCard)
-			.setName("站点")
+		this.row(glmCard, "站点")
 			.addDropdown((drop) => {
 				for (const [host, label] of Object.entries(GLM_HOSTS)) {
 					drop.addOption(host, label);
@@ -137,8 +149,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(glmCard)
-			.setName("显示指标")
+		this.row(glmCard, "显示指标")
 			.addDropdown((drop) => {
 				for (const [k, label] of Object.entries(GLM_METRICS)) {
 					drop.addOption(k, label);
@@ -150,9 +161,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(glmCard)
-			.setName("API Key")
-			.setDesc("open.bigmodel.cn 控制台 → API Keys（形如 xxxxxxxx.yyyyyyyy），只存本机")
+		this.row(glmCard, "API Key", "open.bigmodel.cn 控制台 → API Keys（形如 xxxxxxxx.yyyyyyyy），只存本机")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.inputEl.style.width = "100%";
@@ -165,8 +174,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		// ─────────────── GitHub Copilot ───────────────
 		const ghCard = this.card(containerEl, "GitHub Copilot", "copilot");
 
-		new Setting(ghCard)
-			.setName("状态栏显示")
+		this.row(ghCard, "状态栏显示")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.showCopilot).onChange(async (v) => {
 					this.plugin.settings.showCopilot = v;
@@ -175,9 +183,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(ghCard)
-			.setName("用户名")
-			.setDesc("个人版 Copilot 账号")
+		this.row(ghCard, "用户名", "个人版 Copilot 账号的 GitHub 用户名")
 			.addText((text) => {
 				text.inputEl.style.width = "100%";
 				text
@@ -189,9 +195,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(ghCard)
-			.setName("PAT")
-			.setDesc("fine-grained Token，需 Plan: Read 权限，只存本机")
+		this.row(ghCard, "PAT", "fine-grained Personal Access Token，需 Plan: Read 权限，只存本机")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.inputEl.style.width = "100%";
@@ -204,9 +208,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(ghCard)
-			.setName("套餐")
-			.setDesc("用于确定每月额度上限；接口返回 limit 字段时优先使用")
+		this.row(ghCard, "套餐", "用于确定每月额度上限；接口返回 limit 字段时优先使用")
 			.addDropdown((drop) => {
 				for (const [tier, label] of Object.entries(GH_TIERS)) {
 					drop.addOption(tier, label);
@@ -218,8 +220,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(ghCard)
-			.setName("显示内容")
+		this.row(ghCard, "显示内容")
 			.addDropdown((drop) => {
 				for (const [k, label] of Object.entries(COPILOT_METRICS)) {
 					drop.addOption(k, label);
@@ -234,8 +235,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		// ─────────────────── DeepSeek ───────────────────
 		const dsCard = this.card(containerEl, "DeepSeek", "ds");
 
-		new Setting(dsCard)
-			.setName("状态栏显示")
+		this.row(dsCard, "状态栏显示")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.showDs).onChange(async (v) => {
 					this.plugin.settings.showDs = v;
@@ -244,9 +244,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(dsCard)
-			.setName("API Key")
-			.setDesc("platform.deepseek.com → API keys，只存本机")
+		this.row(dsCard, "API Key", "platform.deepseek.com → API keys，只存本机")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.inputEl.style.width = "100%";
@@ -256,8 +254,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(dsCard)
-			.setName("显示内容")
+		this.row(dsCard, "显示内容")
 			.addDropdown((drop) => {
 				for (const [k, label] of Object.entries(DS_METRICS)) {
 					drop.addOption(k, label);
@@ -269,9 +266,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(dsCard)
-			.setName("余额预警（元）")
-			.setDesc("CNY 余额低于该值时变红，默认 10")
+		this.row(dsCard, "余额预警（元）", "CNY 余额低于该值时状态栏变红，默认 10")
 			.addText((text) => {
 				text.inputEl.type = "number";
 				text.setValue(String(this.plugin.settings.dsWarnThreshold)).onChange(async (v) => {
@@ -284,11 +279,11 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		// ─────────────────── 状态栏格式 ───────────────────
 		const fmtCard = this.card(containerEl, "状态栏格式", "format");
 
-		new Setting(fmtCard)
-			.setName("显示模板")
-			.setDesc(
-				"占位符：{glm} {copilot} {deepseek} {custom:名称}；未启用的自动移除，无效时回退默认顺序",
-			)
+		this.row(
+			fmtCard,
+			"显示模板",
+			"占位符：{glm} {copilot} {deepseek} {custom:名称}；未启用的自动移除，无效时回退默认顺序",
+		)
 			.addText((text) => {
 				text.inputEl.style.width = "100%";
 				text
@@ -301,8 +296,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(fmtCard)
-			.setName("分隔符")
+		this.row(fmtCard, "分隔符")
 			.addDropdown((drop) => {
 				for (const [k, label] of Object.entries(SEPARATORS)) {
 					drop.addOption(k, label);
@@ -314,9 +308,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(fmtCard)
-			.setName("总开关：显示状态栏")
-			.setDesc("关闭后仅保留命令面板入口")
+		this.row(fmtCard, "显示状态栏", "总开关：关闭后仅保留命令面板入口")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.showInStatusBar).onChange(async (v) => {
 					this.plugin.settings.showInStatusBar = v;
@@ -355,9 +347,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		// ─────────────────── 通用 ───────────────────
 		const genCard = this.card(containerEl, "通用", "general");
 
-		new Setting(genCard)
-			.setName("刷新间隔（分钟）")
-			.setDesc("自动轮询间隔，1–120 分钟，默认 5")
+		this.row(genCard, "刷新间隔（分钟）", "自动轮询间隔，1–120 分钟，默认 5")
 			.addText((text) => {
 				text.inputEl.type = "number";
 				text.inputEl.min = "1";
@@ -372,20 +362,28 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		this.equalizeCardHeights();
 	}
 
-	/** 每张卡片内条目统一高度（按卡内最高条目取齐；自定义 API 子卡片内容不参与） */
+	/** 每张卡片内条目统一高度（按卡内最高条目取齐；自定义 API 子卡片内容不参与）。
+	 *  渲染时序不定，多次幂等执行确保覆盖（detached/未渲染完时测量无效自动跳过） */
 	private equalizeCardHeights(): void {
-		requestAnimationFrame(() => {
-			document.querySelectorAll(".uh-card").forEach((card) => {
-				const items = Array.from(
-					(card as HTMLElement).querySelectorAll(":scope > .setting-item"),
+		const apply = () => {
+			const root = this.containerEl;
+			if (!root.isConnected) return;
+			const cards = Array.from(root.querySelectorAll(".uh-card"));
+			for (const card of cards) {
+				const items = Array.from(card.querySelectorAll(":scope > .setting-item"));
+				if (items.length === 0) continue;
+				const max = Math.max(
+					...items.map((i) => (i as HTMLElement).getBoundingClientRect().height),
 				);
-				if (items.length === 0) return;
-				const max = Math.max(...items.map((i) => i.getBoundingClientRect().height));
+				if (max <= 0) continue;
 				for (const item of items) {
 					(item as HTMLElement).style.minHeight = `${Math.round(max)}px`;
 				}
-			});
-		});
+			}
+		};
+		for (const delay of [200, 600, 1200, 2000]) {
+			window.setTimeout(apply, delay);
+		}
 	}
 
 	/** 单条自定义 API 的配置卡片 */
@@ -410,7 +408,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(card).setName("名称").addText((text) => {
+		this.row(card, "名称").addText((text) => {
 			text.inputEl.style.width = "100%";
 			text.setPlaceholder("Relay").setValue(cfg.name).onChange(async (v) => {
 				cfg.name = v.trim();
@@ -418,7 +416,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 			});
 		});
 
-		new Setting(card).setName("URL").addText((text) => {
+		this.row(card, "URL").addText((text) => {
 			text.inputEl.style.width = "100%";
 			text.setPlaceholder("https://example.com/api/quota").setValue(cfg.url).onChange(async (v) => {
 				cfg.url = v.trim();
@@ -426,8 +424,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 			});
 		});
 
-		new Setting(card)
-			.setName("Method")
+		this.row(card, "Method")
 			.addDropdown((drop) => {
 				drop.addOption("GET", "GET");
 				drop.addOption("POST", "POST");
@@ -437,12 +434,10 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(card)
-			.setName("Headers")
-			.setDesc('每行一条 "Key: Value"，值可用 {apiKey} 代表下方 API Key')
+		this.row(card, "Headers", '每行一条 "Key: Value"，值可用 {apiKey} 代表下方 API Key')
 			.addTextArea((ta) => {
 				ta.inputEl.style.width = "100%";
-				ta.inputEl.rows = 3;
+				ta.inputEl.rows = 2;
 				ta.setPlaceholder("Authorization: Bearer {apiKey}").setValue(cfg.headersText).onChange(
 					async (v) => {
 						cfg.headersText = v;
@@ -451,20 +446,17 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				);
 			});
 
-		new Setting(card)
-			.setName("Body（POST）")
+		this.row(card, "Body（POST）")
 			.addTextArea((ta) => {
 				ta.inputEl.style.width = "100%";
-				ta.inputEl.rows = 2;
+				ta.inputEl.rows = 1;
 				ta.setValue(cfg.body).onChange(async (v) => {
 					cfg.body = v;
 					await this.plugin.saveSettings();
 				});
 			});
 
-		new Setting(card)
-			.setName("API Key")
-			.setDesc("仅供 Headers 中 {apiKey} 引用")
+		this.row(card, "API Key", "仅供 Headers 中 {apiKey} 引用")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.inputEl.style.width = "100%";
@@ -478,9 +470,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		for (let i = 0; i < 2; i++) {
 			const rule = cfg.extract[i];
 			if (!rule) continue;
-			new Setting(card)
-				.setName(i === 0 ? "提取值 1" : "提取值 2")
-				.setDesc(i === 0 ? "JSON 点路径 → 显示值" : "可选，模板中用 {value2}")
+			this.row(card, i === 0 ? "提取值 1" : "提取值 2", i === 0 ? "JSON 点路径 → 显示值" : "可选，模板中用 {value2}")
 				.addText((text) => {
 					text.inputEl.style.width = "55%";
 					text.setPlaceholder("data.percentage").setValue(rule.path).onChange(async (v) => {
@@ -499,9 +489,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 		}
 
-		new Setting(card)
-			.setName("显示模板")
-			.setDesc("可用 {name} {value} {value2}，默认 {value}")
+		this.row(card, "显示模板", "可用 {name} {value} {value2}，默认 {value}")
 			.addText((text) => {
 				text.inputEl.style.width = "100%";
 				text.setPlaceholder("{value}").setValue(cfg.template).onChange(async (v) => {

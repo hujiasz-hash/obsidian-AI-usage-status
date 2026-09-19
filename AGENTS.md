@@ -5,7 +5,7 @@
 **AI Usage HUD**：Obsidian 状态栏插件，显示 AI 服务用量/余额。
 当前支持：GLM Coding Plan（智谱国内站）+ DeepSeek。规划中：GitHub Copilot、自定义 API（见 PRD.md）。
 
-- 源码仓库：`~/Desktop/Working/obsidian-usage-hud`（本目录）
+- 源码仓库：`~/Desktop/Working/2026-09_obsidian-usage-hud`（本目录）
 - 部署目标：`/Users/hujia/Desktop/Working/110_L3/.obsidian/plugins/usage-hud/`
 - 相关人：胡嘉（作者/唯一用户）
 

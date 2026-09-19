@@ -13,6 +13,9 @@
 .uh-label-glm {
 	color: var(--color-blue, #3b82f6);
 }
+.uh-label-copilot {
+	color: var(--color-orange, #f97316);
+}
 .uh-label-ds {
 	color: var(--color-purple, #a78bfa);
 }

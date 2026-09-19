@@ -1,49 +1,26 @@
 import { Plugin, Notice } from "obsidian";
-import {
-	fetchDeepSeekBalance,
-	fetchGlmQuota,
-	currencySymbol,
-	formatCountdown,
-	type GlmQuota,
-	type DeepSeekBalance,
-} from "./api";
-import {
-	DEFAULT_SETTINGS,
-	UsageHudSettingTab,
-	type UsageHudSettings,
-} from "./settings";
+import { DEFAULT_SETTINGS, UsageHudSettingTab, type UsageHudSettings } from "./settings";
 import { UsageModal } from "./modal";
-
-export interface UsageHudState {
-	glm: GlmQuota | null;
-	ds: DeepSeekBalance | null;
-	glmError: string;
-	dsError: string;
-	refreshing: boolean;
-}
-
-/** 金额智能缩写：状态栏空间有限，大额用千分位取整或 k 缩写；明细弹窗仍显示完整两位小数 */
-function formatMoney(n: number): string {
-	if (n >= 1000000) return `${(n / 1000000).toFixed(2)}M`;
-	if (n >= 10000) return `${(n / 1000).toFixed(1)}k`;
-	if (n >= 1000) return Math.round(n).toLocaleString("en-US");
-	return n.toFixed(2);
-}
+import { GlmProvider } from "./provider/glm";
+import { DeepSeekProvider } from "./provider/deepseek";
+import { CopilotProvider } from "./provider/copilot";
+import type { UsageProvider } from "./provider/types";
 
 export default class UsageHudPlugin extends Plugin {
 	settings!: UsageHudSettings;
-	state: UsageHudState = {
-		glm: null,
-		ds: null,
-		glmError: "",
-		dsError: "",
-		refreshing: false,
-	};
+	providers: UsageProvider[] = [];
 	private statusBarEl: HTMLElement | null = null;
 	private pollTimer: number | null = null;
+	private refreshing = false;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
+
+		this.providers = [
+			new GlmProvider(this.settings),
+			new CopilotProvider(this.settings),
+			new DeepSeekProvider(this.settings),
+		];
 
 		this.statusBarEl = this.addStatusBarItem();
 		this.statusBarEl.addClass("uh-statusbar");
@@ -73,7 +50,13 @@ export default class UsageHudPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const raw = (await this.loadData()) as Partial<UsageHudSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, raw ?? {});
+		// schemaVersion 迁移：v0.1 配置（无 schemaVersion）补齐新字段并落盘一次
+		if (!raw?.schemaVersion || raw.schemaVersion < DEFAULT_SETTINGS.schemaVersion) {
+			this.settings.schemaVersion = DEFAULT_SETTINGS.schemaVersion;
+			await this.saveData(this.settings);
+		}
 	}
 
 	async saveSettings(): Promise<void> {
@@ -96,136 +79,64 @@ export default class UsageHudPlugin extends Plugin {
 		}
 	}
 
-	// ── 数据获取 ────────────────────────────────────────────
+	// ── 数据获取：依次驱动各 provider，互不拖累 ─────────────
 
 	async refresh(): Promise<void> {
-		if (this.state.refreshing) return;
-		this.state.refreshing = true;
+		if (this.refreshing) return;
+		this.refreshing = true;
 		this.renderStatusBar();
 
-		const tasks: Promise<void>[] = [];
+		await Promise.allSettled(
+			this.providers.filter((p) => p.isConfigured()).map((p) => p.fetch()),
+		);
 
-		if (this.settings.glmApiKey) {
-			tasks.push(
-				fetchGlmQuota(this.settings.glmHost, this.settings.glmApiKey)
-					.then((q) => {
-						this.state.glm = q;
-						this.state.glmError = "";
-					})
-					.catch((e: Error) => {
-						this.state.glmError = e.message || String(e);
-					}),
-			);
-		}
-		if (this.settings.dsApiKey) {
-			tasks.push(
-				fetchDeepSeekBalance(this.settings.dsApiKey)
-					.then((b) => {
-						this.state.ds = b;
-						this.state.dsError = "";
-					})
-					.catch((e: Error) => {
-						this.state.dsError = e.message || String(e);
-					}),
-			);
-		}
-
-		await Promise.all(tasks);
-		this.state.refreshing = false;
+		this.refreshing = false;
 		this.renderStatusBar();
 	}
 
-	// ── 状态栏渲染 ──────────────────────────────────────────
+	// ── 状态栏渲染：按 provider 顺序组装 ────────────────────
 
 	renderStatusBar(): void {
 		const el = this.statusBarEl;
 		if (!el) return;
 		el.empty();
 		el.removeAttribute("aria-label");
-		el.removeAttribute("title");
 
 		if (!this.settings.showInStatusBar) return;
 
-		const hasGlm = Boolean(this.settings.glmApiKey);
-		const hasDs = Boolean(this.settings.dsApiKey);
-		if (!hasGlm && !hasDs) {
+		const configured = this.providers.filter((p) => p.isConfigured());
+		if (configured.length === 0) {
 			el.setText("Usage HUD 未配置");
 			el.setAttr("aria-label", "AI Usage HUD：请在设置中填入 API Key");
 			return;
 		}
 
-		if (hasGlm) {
-			const glm = this.state.glm;
+		const tooltipBits: string[] = [];
+		for (const p of configured) {
+			const parts = p.statusBarParts();
 			const span = el.createSpan({ cls: "uh-seg" });
-			span.createSpan({ text: "GLM", cls: "uh-label uh-label-glm" });
-			if (glm) {
-				const limit = glm.tokenWeekly ?? glm.token5h; // 状态栏只显示周额度，老套餐回退 5h
-				if (limit) {
-					const pct = Math.round(limit.percentage ?? 0);
-					span.createSpan({ text: ` ${pct}%`, cls: this.pctClass(pct) });
-				} else {
-					span.createSpan({ text: " --" });
+			span.createSpan({ text: p.label, cls: `uh-label ${p.labelClass}` });
+			if (parts && parts.length > 0) {
+				for (const part of parts) {
+					span.createSpan({ text: part.text, cls: part.cls });
 				}
-			} else if (this.state.glmError) {
-				span.createSpan({ text: " ✕", cls: "uh-bad" });
 			} else {
-				span.createSpan({ text: " …" });
+				// 尚未拉到数据：有错误显示 ✕，否则显示 …
+				span.createSpan({ text: p.error ? " ✕" : " …", cls: p.error ? "uh-bad" : "" });
 			}
+			tooltipBits.push(...p.tooltipLines());
 		}
 
-		if (hasDs) {
-			const ds = this.state.ds;
-			const span = el.createSpan({ cls: "uh-seg" });
-			span.createSpan({ text: "DS", cls: "uh-label uh-label-ds" });
-			if (ds) {
-				const c = ds.currencies[0];
-				if (c) {
-					const warn = c.currency.toUpperCase() === "CNY"
-						? c.totalBalance < this.settings.dsWarnThreshold
-						: false;
-					span.createSpan({
-						text: ` ${currencySymbol(c.currency)}${formatMoney(c.totalBalance)}`,
-						cls: warn || !ds.isAvailable ? "uh-bad" : "uh-good",
-					});
-				} else {
-					span.createSpan({ text: " --" });
-				}
-			} else if (this.state.dsError) {
-				span.createSpan({ text: " ✕", cls: "uh-bad" });
-			} else {
-				span.createSpan({ text: " …" });
-			}
-		}
-
-		// tooltip：更新时间 + 各窗口详情
-		const bits: string[] = [];
-		if (this.state.glm) {
-			const g = this.state.glm;
-			const parts: string[] = [];
-			if (g.token5h) parts.push(`5h ${Math.round(g.token5h.percentage ?? 0)}%${g.token5h.nextResetTime ? `（${formatCountdown(g.token5h.nextResetTime)}重置）` : ""}`);
-			if (g.tokenWeekly) parts.push(`周 ${Math.round(g.tokenWeekly.percentage ?? 0)}%${g.tokenWeekly.nextResetTime ? `（${formatCountdown(g.tokenWeekly.nextResetTime)}重置）` : ""}`);
-			if (g.mcp) parts.push(`MCP ${g.mcp.currentValue ?? 0}/${g.mcp.usage ?? 0}`);
-			bits.push(`GLM${g.level ? " " + g.level.toUpperCase() : ""}：${parts.join(" / ")} · 更新于 ${new Date(g.fetchedAt).toLocaleTimeString()}`);
-		}
-		if (this.state.glmError) bits.push(`GLM 失败：${this.state.glmError}`);
-		if (this.state.ds) bits.push(`DeepSeek 更新于 ${new Date(this.state.ds.fetchedAt).toLocaleTimeString()}`);
-		if (this.state.dsError) bits.push(`DeepSeek 失败：${this.state.dsError}`);
-		if (bits.length > 0) el.setAttr("aria-label", bits.join("\n"));
-	}
-
-	private pctClass(pct: number): string {
-		if (pct >= 90) return "uh-bad";
-		if (pct >= 70) return "uh-warn";
-		return "uh-good";
+		if (tooltipBits.length > 0) el.setAttr("aria-label", tooltipBits.join("\n"));
 	}
 
 	// ── 明细弹窗 ────────────────────────────────────────────
 
 	openDetails(): void {
-		if (!this.settings.glmApiKey && !this.settings.dsApiKey) {
+		if (this.providers.every((p) => !p.isConfigured())) {
 			new Notice("Usage HUD：请先在设置中填入 API Key");
 			return;
 		}
-		new UsageModal(this.app, this.state, () => this.refresh()).open();
+		new UsageModal(this.app, this.providers, () => this.refresh()).open();
 	}
 }

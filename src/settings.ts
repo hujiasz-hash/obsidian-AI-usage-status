@@ -6,19 +6,35 @@ export const GLM_HOSTS: Record<string, string> = {
 	"https://api.z.ai": "Z.ai 国际站 (api.z.ai)",
 };
 
+export const GH_TIERS: Record<string, string> = {
+	pro: "Copilot Pro (300/月)",
+	free: "Copilot Free (50/月)",
+	"pro+": "Copilot Pro+ (1500/月)",
+	business: "Copilot Business (300/月)",
+	enterprise: "Copilot Enterprise (1000/月)",
+};
+
 export interface UsageHudSettings {
+	schemaVersion: number; // 2 = 引入 provider 框架与 Copilot
 	glmHost: string;
 	glmApiKey: string;
 	dsApiKey: string;
+	ghUsername: string;
+	ghPat: string;
+	ghTier: string; // COPILOT_PLAN_LIMITS 的 key
 	intervalMin: number;
 	dsWarnThreshold: number;
 	showInStatusBar: boolean;
 }
 
 export const DEFAULT_SETTINGS: UsageHudSettings = {
+	schemaVersion: 2,
 	glmHost: "https://open.bigmodel.cn",
 	glmApiKey: "",
 	dsApiKey: "",
+	ghUsername: "",
+	ghPat: "",
+	ghTier: "pro",
 	intervalMin: 5,
 	dsWarnThreshold: 10,
 	showInStatusBar: true,
@@ -65,6 +81,51 @@ export class UsageHudSettingTab extends PluginSettingTab {
 						this.plugin.settings.glmApiKey = v.trim();
 						await this.plugin.saveSettings();
 					});
+			});
+
+		new Setting(containerEl).setName("GitHub Copilot").setHeading();
+
+		new Setting(containerEl)
+			.setName("GitHub 用户名")
+			.setDesc("个人版 Copilot 账号的用户名")
+			.addText((text) => {
+				text.inputEl.style.width = "100%";
+				text
+					.setPlaceholder("octocat")
+					.setValue(this.plugin.settings.ghUsername)
+					.onChange(async (v) => {
+						this.plugin.settings.ghUsername = v.trim();
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName("GitHub PAT")
+			.setDesc("fine-grained Personal Access Token，需 Plan: Read 权限。只存本机。")
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.inputEl.style.width = "100%";
+				text
+					.setPlaceholder("github_pat_…")
+					.setValue(this.plugin.settings.ghPat)
+					.onChange(async (v) => {
+						this.plugin.settings.ghPat = v.trim();
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName("Copilot 套餐")
+			.setDesc("用于确定每月额度上限；若接口返回 limit 字段则优先使用")
+			.addDropdown((drop) => {
+				for (const [tier, label] of Object.entries(GH_TIERS)) {
+					drop.addOption(tier, label);
+				}
+				drop.setValue(this.plugin.settings.ghTier).onChange(async (v) => {
+					this.plugin.settings.ghTier = v;
+					await this.plugin.saveSettings();
+					this.plugin.refresh();
+				});
 			});
 
 		new Setting(containerEl).setName("DeepSeek").setHeading();

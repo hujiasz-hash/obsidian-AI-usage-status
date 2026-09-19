@@ -86,17 +86,22 @@ export const DEFAULT_SETTINGS: UsageHudSettings = {
 
 export class UsageHudSettingTab extends PluginSettingTab {
 	plugin: UsageHudPlugin;
+	/** 自定义 API 区块容器引用（增删后局部重建用） */
+	private customSectionEl: HTMLElement | null = null;
 
 	constructor(app: App, plugin: UsageHudPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
-	/** 保存 + 重建 provider + 刷新（自定义 API 变更时用） */
+	/** 保存 + 重建 provider + 局部重渲染自定义 API 区块（不重建整页，避免滚动跳顶） */
 	private async applyCustomChanges(): Promise<void> {
 		await this.plugin.saveSettings();
 		await this.plugin.rebuildProviders();
-		this.display(); // 重新渲染列表（增删后序号/内容变化）
+		if (this.customSectionEl) {
+			this.renderCustomSection(this.customSectionEl);
+		}
+		this.equalizeCardHeights();
 	}
 
 	/** 分区卡片：带底色容器 + 彩色标题条（accent 对应各 provider 品牌色） */
@@ -319,30 +324,8 @@ export class UsageHudSettingTab extends PluginSettingTab {
 
 		// ─────────────────── 自定义 API ───────────────────
 		const customCard = this.card(containerEl, "自定义 API（最多 5 条）", "custom");
-
-		const list = this.plugin.settings.customProviders ?? [];
-		list.forEach((cfg, index) => {
-			this.renderCustomCard(customCard, cfg, index);
-		});
-
-		new Setting(customCard).addButton((btn) => {
-			btn.setButtonText("＋ 添加自定义 API").setDisabled(list.length >= 5);
-			btn.onClick(async () => {
-				this.plugin.settings.customProviders.push({
-					id: `custom-${Date.now()}`,
-					name: "",
-					url: "",
-					method: "GET",
-					headersText: "",
-					body: "",
-					apiKey: "",
-					enabled: true,
-					extract: [{ path: "", format: "percent" }],
-					template: "{value}",
-				});
-				await this.applyCustomChanges();
-			});
-		});
+		this.customSectionEl = customCard;
+		this.renderCustomSection(customCard);
 
 		// ─────────────────── 通用 ───────────────────
 		const genCard = this.card(containerEl, "通用", "general");
@@ -384,6 +367,34 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		for (const delay of [200, 600, 1200, 2000]) {
 			window.setTimeout(apply, delay);
 		}
+	}
+
+	/** 自定义 API 区块内容：子卡片列表 + 添加按钮；增删后局部重建，不滚动页面 */
+	private renderCustomSection(containerEl: HTMLElement): void {
+		containerEl.empty();
+		const list = this.plugin.settings.customProviders ?? [];
+		list.forEach((cfg, index) => {
+			this.renderCustomCard(containerEl, cfg, index);
+		});
+
+		new Setting(containerEl).addButton((btn) => {
+			btn.setButtonText("＋ 添加自定义 API").setDisabled(list.length >= 5);
+			btn.onClick(async () => {
+				this.plugin.settings.customProviders.push({
+					id: `custom-${Date.now()}`,
+					name: "",
+					url: "",
+					method: "GET",
+					headersText: "",
+					body: "",
+					apiKey: "",
+					enabled: true,
+					extract: [{ path: "", format: "percent" }],
+					template: "{value}",
+				});
+				await this.applyCustomChanges();
+			});
+		});
 	}
 
 	/** 单条自定义 API 的配置卡片 */

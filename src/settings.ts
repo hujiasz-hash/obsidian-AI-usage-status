@@ -99,14 +99,22 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		this.display(); // 重新渲染列表（增删后序号/内容变化）
 	}
 
+	/** 分区卡片：带底色容器 + 彩色标题条（accent 对应各 provider 品牌色） */
+	private card(containerEl: HTMLElement, title: string, accent: string): HTMLElement {
+		const card = containerEl.createDiv("uh-card");
+		const h = card.createDiv(`uh-card-title uh-accent-${accent}`);
+		h.setText(title);
+		return card;
+	}
+
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
 
 		// ─────────────────── GLM ───────────────────
-		new Setting(containerEl).setName("GLM Coding Plan").setHeading();
+		const glmCard = this.card(containerEl, "GLM Coding Plan", "glm");
 
-		new Setting(containerEl)
+		new Setting(glmCard)
 			.setName("状态栏显示")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.showGlm).onChange(async (v) => {
@@ -116,9 +124,8 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
+		new Setting(glmCard)
 			.setName("站点")
-			.setDesc("你的套餐所属站点")
 			.addDropdown((drop) => {
 				for (const [host, label] of Object.entries(GLM_HOSTS)) {
 					drop.addOption(host, label);
@@ -130,7 +137,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
+		new Setting(glmCard)
 			.setName("显示指标")
 			.addDropdown((drop) => {
 				for (const [k, label] of Object.entries(GLM_METRICS)) {
@@ -143,9 +150,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
-			.setName("GLM API Key")
-			.setDesc("open.bigmodel.cn 控制台 → API Keys。格式形如 xxxxxxxx.yyyyyyyy。只存本机。")
+		new Setting(glmCard)
+			.setName("API Key")
+			.setDesc("open.bigmodel.cn 控制台 → API Keys（形如 xxxxxxxx.yyyyyyyy），只存本机")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.inputEl.style.width = "100%";
@@ -156,9 +163,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 			});
 
 		// ─────────────── GitHub Copilot ───────────────
-		new Setting(containerEl).setName("GitHub Copilot").setHeading();
+		const ghCard = this.card(containerEl, "GitHub Copilot", "copilot");
 
-		new Setting(containerEl)
+		new Setting(ghCard)
 			.setName("状态栏显示")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.showCopilot).onChange(async (v) => {
@@ -168,9 +175,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
-			.setName("GitHub 用户名")
-			.setDesc("个人版 Copilot 账号的用户名")
+		new Setting(ghCard)
+			.setName("用户名")
+			.setDesc("个人版 Copilot 账号")
 			.addText((text) => {
 				text.inputEl.style.width = "100%";
 				text
@@ -182,9 +189,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName("GitHub PAT")
-			.setDesc("fine-grained Personal Access Token，需 Plan: Read 权限。只存本机。")
+		new Setting(ghCard)
+			.setName("PAT")
+			.setDesc("fine-grained Token，需 Plan: Read 权限，只存本机")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.inputEl.style.width = "100%";
@@ -197,9 +204,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName("Copilot 套餐")
-			.setDesc("用于确定每月额度上限；若接口返回 limit 字段则优先使用")
+		new Setting(ghCard)
+			.setName("套餐")
+			.setDesc("用于确定每月额度上限；接口返回 limit 字段时优先使用")
 			.addDropdown((drop) => {
 				for (const [tier, label] of Object.entries(GH_TIERS)) {
 					drop.addOption(tier, label);
@@ -211,7 +218,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
+		new Setting(ghCard)
 			.setName("显示内容")
 			.addDropdown((drop) => {
 				for (const [k, label] of Object.entries(COPILOT_METRICS)) {
@@ -225,9 +232,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 			});
 
 		// ─────────────────── DeepSeek ───────────────────
-		new Setting(containerEl).setName("DeepSeek").setHeading();
+		const dsCard = this.card(containerEl, "DeepSeek", "ds");
 
-		new Setting(containerEl)
+		new Setting(dsCard)
 			.setName("状态栏显示")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.showDs).onChange(async (v) => {
@@ -237,9 +244,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
-			.setName("DeepSeek API Key")
-			.setDesc("platform.deepseek.com → API keys。只存本机。")
+		new Setting(dsCard)
+			.setName("API Key")
+			.setDesc("platform.deepseek.com → API keys，只存本机")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.inputEl.style.width = "100%";
@@ -249,7 +256,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
+		new Setting(dsCard)
 			.setName("显示内容")
 			.addDropdown((drop) => {
 				for (const [k, label] of Object.entries(DS_METRICS)) {
@@ -262,9 +269,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
+		new Setting(dsCard)
 			.setName("余额预警（元）")
-			.setDesc("CNY 余额低于该值时状态栏变红，默认 10")
+			.setDesc("CNY 余额低于该值时变红，默认 10")
 			.addText((text) => {
 				text.inputEl.type = "number";
 				text.setValue(String(this.plugin.settings.dsWarnThreshold)).onChange(async (v) => {
@@ -275,12 +282,12 @@ export class UsageHudSettingTab extends PluginSettingTab {
 			});
 
 		// ─────────────────── 状态栏格式 ───────────────────
-		new Setting(containerEl).setName("状态栏格式").setHeading();
+		const fmtCard = this.card(containerEl, "状态栏格式", "format");
 
-		new Setting(containerEl)
+		new Setting(fmtCard)
 			.setName("显示模板")
 			.setDesc(
-				"占位符：{glm} {copilot} {deepseek} {custom:名称}。未启用的占位符自动移除；无法解析时回退默认顺序。",
+				"占位符：{glm} {copilot} {deepseek} {custom:名称}；未启用的自动移除，无效时回退默认顺序",
 			)
 			.addText((text) => {
 				text.inputEl.style.width = "100%";
@@ -294,7 +301,7 @@ export class UsageHudSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
+		new Setting(fmtCard)
 			.setName("分隔符")
 			.addDropdown((drop) => {
 				for (const [k, label] of Object.entries(SEPARATORS)) {
@@ -307,8 +314,8 @@ export class UsageHudSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
-			.setName("显示状态栏")
+		new Setting(fmtCard)
+			.setName("总开关：显示状态栏")
 			.setDesc("关闭后仅保留命令面板入口")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.showInStatusBar).onChange(async (v) => {
@@ -319,15 +326,14 @@ export class UsageHudSettingTab extends PluginSettingTab {
 			});
 
 		// ─────────────────── 自定义 API ───────────────────
-		new Setting(containerEl).setName("自定义 API（最多 5 条）").setHeading();
+		const customCard = this.card(containerEl, "自定义 API（最多 5 条）", "custom");
 
 		const list = this.plugin.settings.customProviders ?? [];
 		list.forEach((cfg, index) => {
-			this.renderCustomCard(containerEl, cfg, index);
+			this.renderCustomCard(customCard, cfg, index);
 		});
 
-		const addBtn = new Setting(containerEl);
-		addBtn.addButton((btn) => {
+		new Setting(customCard).addButton((btn) => {
 			btn.setButtonText("＋ 添加自定义 API").setDisabled(list.length >= 5);
 			btn.onClick(async () => {
 				this.plugin.settings.customProviders.push({
@@ -347,9 +353,9 @@ export class UsageHudSettingTab extends PluginSettingTab {
 		});
 
 		// ─────────────────── 通用 ───────────────────
-		new Setting(containerEl).setName("通用").setHeading();
+		const genCard = this.card(containerEl, "通用", "general");
 
-		new Setting(containerEl)
+		new Setting(genCard)
 			.setName("刷新间隔（分钟）")
 			.setDesc("自动轮询间隔，1–120 分钟，默认 5")
 			.addText((text) => {

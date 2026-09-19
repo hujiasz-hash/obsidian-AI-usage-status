@@ -119,10 +119,59 @@
 	justify-content: flex-end;
 }
 
-/* 自定义 API 设置卡片 */
+/* 自定义 API 设置卡片（嵌在 uh-card 内，用主背景色区分层级） */
+.uh-card .uh-custom-card {
+	background: var(--background-primary);
+}
 .uh-custom-card {
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 8px;
-	padding: 8px 12px 4px;
+	padding: 4px 12px 2px;
 	margin: 8px 0;
+}
+
+/* ── 设置页分区卡片 ── */
+.uh-card {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 10px;
+	padding: 8px 14px 0;
+	margin: 10px 0;
+}
+.uh-card .setting-item {
+	border-top: none;
+	padding: 10px 0;
+}
+.uh-card-title {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	font-weight: 600;
+	font-size: var(--font-ui-small);
+	margin: 4px 0 0;
+}
+.uh-card-title::before {
+	content: "";
+	width: 9px;
+	height: 9px;
+	border-radius: 3px;
+	background: var(--uh-accent, var(--interactive-accent));
+}
+.uh-accent-glm {
+	--uh-accent: var(--color-blue, #3b82f6);
+}
+.uh-accent-copilot {
+	--uh-accent: var(--color-orange, #f97316);
+}
+.uh-accent-ds {
+	--uh-accent: var(--color-purple, #a78bfa);
+}
+.uh-accent-format {
+	--uh-accent: var(--color-cyan, #06b6d4);
+}
+.uh-accent-custom {
+	--uh-accent: var(--color-pink, #ec4899);
+}
+.uh-accent-general {
+	--uh-accent: var(--text-muted);
 }

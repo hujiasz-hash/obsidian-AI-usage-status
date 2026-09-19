@@ -143,6 +143,7 @@
 	padding: 4px 10px;
 	display: flex;
 	align-items: center;
+	border-radius: 3px !important;
 }
 .uh-card-title {
 	display: flex;

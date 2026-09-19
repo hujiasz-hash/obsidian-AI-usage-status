@@ -135,7 +135,7 @@
 	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 8px;
-	padding: 0 18px 3px;
+	padding: 0 18px 1px;
 	margin: 6px 0;
 }
 .uh-card .setting-item {

@@ -1,0 +1,9 @@
+{
+	"id": "usage-hud",
+	"name": "AI Usage HUD",
+	"version": "0.1.0",
+	"minAppVersion": "1.4.0",
+	"description": "在状态栏显示 GLM Coding Plan 用量与 DeepSeek 余额。",
+	"author": "胡嘉",
+	"isDesktopOnly": false
+}

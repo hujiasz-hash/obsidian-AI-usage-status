@@ -1,0 +1,20 @@
+{
+	"name": "obsidian-usage-hud",
+	"version": "0.1.0",
+	"description": "Status bar usage for GLM Coding Plan and DeepSeek",
+	"main": "main.js",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+	},
+	"author": "胡嘉",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^22.10.0",
+		"builtin-modules": "^4.0.0",
+		"esbuild": "^0.24.0",
+		"obsidian": "^1.8.7",
+		"tslib": "^2.8.1",
+		"typescript": "^5.7.2"
+	}
+}

@@ -135,12 +135,12 @@
 	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 10px;
-	padding: 8px 14px 0;
-	margin: 10px 0;
+	padding: 2px 18px 0;
+	margin: 8px 0;
 }
 .uh-card .setting-item {
 	border-top: none;
-	padding: 10px 0;
+	padding: 6px 0;
 }
 .uh-card-title {
 	display: flex;
@@ -148,7 +148,7 @@
 	gap: 7px;
 	font-weight: 600;
 	font-size: var(--font-ui-small);
-	margin: 4px 0 0;
+	margin: 6px 0 0;
 }
 .uh-card-title::before {
 	content: "";

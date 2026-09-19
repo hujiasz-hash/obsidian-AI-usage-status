@@ -376,13 +376,13 @@ export class UsageHudSettingTab extends PluginSettingTab {
 	private equalizeCardHeights(): void {
 		requestAnimationFrame(() => {
 			document.querySelectorAll(".uh-card").forEach((card) => {
-				const items = [
-					...(card as HTMLElement).querySelectorAll(":scope > .setting-item"),
-				];
+				const items = Array.from(
+					(card as HTMLElement).querySelectorAll(":scope > .setting-item"),
+				);
 				if (items.length === 0) return;
 				const max = Math.max(...items.map((i) => i.getBoundingClientRect().height));
 				for (const item of items) {
-					item.style.minHeight = `${Math.round(max)}px`;
+					(item as HTMLElement).style.minHeight = `${Math.round(max)}px`;
 				}
 			});
 		});

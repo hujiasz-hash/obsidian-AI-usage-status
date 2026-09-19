@@ -83,6 +83,10 @@ export class DeepSeekProvider implements UsageProvider {
 		return Boolean(this.settings.dsApiKey);
 	}
 
+	statusbarEnabled(): boolean {
+		return this.settings.showDs;
+	}
+
 	async fetch(): Promise<void> {
 		try {
 			this.balance = await fetchDeepSeekBalance(this.settings.dsApiKey);
@@ -99,10 +103,15 @@ export class DeepSeekProvider implements UsageProvider {
 		if (!c) return [{ text: " --", cls: "" }];
 		const warn =
 			c.currency.toUpperCase() === "CNY" ? c.totalBalance < this.settings.dsWarnThreshold : false;
+		const cls = warn || !ds.isAvailable ? "uh-bad" : "uh-good";
+		// dsMetric：balance = 金额（现状），status = 仅可用状态点（PRD R4）
+		if (this.settings.dsMetric === "status") {
+			return [{ text: " ●", cls }];
+		}
 		return [
 			{
 				text: ` ${currencySymbol(c.currency)}${formatMoney(c.totalBalance)}`,
-				cls: warn || !ds.isAvailable ? "uh-bad" : "uh-good",
+				cls,
 			},
 		];
 	}

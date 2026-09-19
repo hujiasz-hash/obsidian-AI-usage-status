@@ -102,6 +102,10 @@ export class CopilotProvider implements UsageProvider {
 		return Boolean(this.settings.ghUsername && this.settings.ghPat);
 	}
 
+	statusbarEnabled(): boolean {
+		return this.settings.showCopilot;
+	}
+
 	async fetch(): Promise<void> {
 		try {
 			this.usage = await fetchCopilotUsage(this.settings.ghUsername, this.settings.ghPat);
@@ -148,6 +152,10 @@ export class CopilotProvider implements UsageProvider {
 
 	statusBarParts(): StatusBarPart[] | null {
 		if (!this.hasParsed) return null;
+		if (this.settings.copilotMetric === "remaining") {
+			const remaining = Math.max(0, this.limit - this.used);
+			return [{ text: ` ${remaining}次`, cls: pctClass(this.usedPct()) }];
+		}
 		const pct = this.usedPct();
 		return [{ text: ` ${pct}%`, cls: pctClass(pct) }];
 	}

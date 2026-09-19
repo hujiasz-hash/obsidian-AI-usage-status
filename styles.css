@@ -7,14 +7,29 @@
 .uh-seg {
 	margin: 0;
 }
-.uh-seg + .uh-seg {
-	margin-left: 4px; /* 约一个半角空格宽 */
+.uh-sep {
+	white-space: pre;
 }
 .uh-label-glm {
 	color: var(--color-blue, #3b82f6);
 }
 .uh-label-copilot {
 	color: var(--color-orange, #f97316);
+}
+.uh-label-custom-0 {
+	color: var(--color-cyan, #06b6d4);
+}
+.uh-label-custom-1 {
+	color: var(--color-pink, #ec4899);
+}
+.uh-label-custom-2 {
+	color: var(--color-green, #22c55e);
+}
+.uh-label-custom-3 {
+	color: var(--color-yellow, #eab308);
+}
+.uh-label-custom-4 {
+	color: var(--color-red, #ef4444);
 }
 .uh-label-ds {
 	color: var(--color-purple, #a78bfa);
@@ -102,4 +117,12 @@
 	margin-top: 12px;
 	display: flex;
 	justify-content: flex-end;
+}
+
+/* 自定义 API 设置卡片 */
+.uh-custom-card {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 8px 12px 4px;
+	margin: 8px 0;
 }

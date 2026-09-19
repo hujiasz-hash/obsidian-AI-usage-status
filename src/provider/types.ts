@@ -18,6 +18,9 @@ export interface UsageProvider {
 	/** 设置是否齐全；未配置的 provider 不参与轮询与显示 */
 	isConfigured(): boolean;
 
+	/** 状态栏显示开关；关闭后仅保留明细弹窗与命令（PRD R4） */
+	statusbarEnabled(): boolean;
+
 	/** 拉取数据并写回自身状态；失败置 error，不清空旧数据 */
 	fetch(): Promise<void>;
 

@@ -98,6 +98,10 @@ export class GlmProvider implements UsageProvider {
 		return Boolean(this.settings.glmApiKey);
 	}
 
+	statusbarEnabled(): boolean {
+		return this.settings.showGlm;
+	}
+
 	async fetch(): Promise<void> {
 		try {
 			this.quota = await fetchGlmQuota(this.settings.glmHost, this.settings.glmApiKey);
@@ -107,14 +111,24 @@ export class GlmProvider implements UsageProvider {
 		}
 	}
 
-	/** 状态栏显示周额度百分比；老套餐（无周窗口）回退 5h（PRD R4 再开放指标选择） */
+	/** 状态栏指标由 glmMetric 决定：周 / 5h / 两者（PRD R4）；缺失窗口自动回退 */
 	statusBarParts(): StatusBarPart[] | null {
 		const q = this.quota;
 		if (!q) return null;
-		const limit = q.tokenWeekly ?? q.token5h;
+		const fmt = (limit: GlmLimit) => {
+			const pct = Math.round(limit.percentage ?? 0);
+			return { text: ` ${pct}%`, cls: pctClass(pct) };
+		};
+		const metric = this.settings.glmMetric;
+		if (metric === "both") {
+			const parts: StatusBarPart[] = [];
+			if (q.token5h) parts.push(fmt(q.token5h));
+			if (q.tokenWeekly) parts.push({ text: `·${Math.round(q.tokenWeekly.percentage ?? 0)}%`, cls: pctClass(Math.round(q.tokenWeekly.percentage ?? 0)) });
+			return parts.length > 0 ? parts : [{ text: " --", cls: "" }];
+		}
+		const limit = metric === "5h" ? (q.token5h ?? q.tokenWeekly) : (q.tokenWeekly ?? q.token5h);
 		if (!limit) return [{ text: " --", cls: "" }];
-		const pct = Math.round(limit.percentage ?? 0);
-		return [{ text: ` ${pct}%`, cls: pctClass(pct) }];
+		return [fmt(limit)];
 	}
 
 	tooltipLines(): string[] {

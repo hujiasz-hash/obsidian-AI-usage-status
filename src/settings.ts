@@ -368,6 +368,24 @@ export class UsageHudSettingTab extends PluginSettingTab {
 					this.plugin.restartPolling();
 				});
 			});
+
+		this.equalizeCardHeights();
+	}
+
+	/** 每张卡片内条目统一高度（按卡内最高条目取齐；自定义 API 子卡片内容不参与） */
+	private equalizeCardHeights(): void {
+		requestAnimationFrame(() => {
+			document.querySelectorAll(".uh-card").forEach((card) => {
+				const items = [
+					...(card as HTMLElement).querySelectorAll(":scope > .setting-item"),
+				];
+				if (items.length === 0) return;
+				const max = Math.max(...items.map((i) => i.getBoundingClientRect().height));
+				for (const item of items) {
+					item.style.minHeight = `${Math.round(max)}px`;
+				}
+			});
+		});
 	}
 
 	/** 单条自定义 API 的配置卡片 */

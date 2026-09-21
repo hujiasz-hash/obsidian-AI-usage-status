@@ -4,6 +4,7 @@ import { UsageModal } from "./modal";
 import { GlmProvider } from "./provider/glm";
 import { DeepSeekProvider } from "./provider/deepseek";
 import { CopilotProvider } from "./provider/copilot";
+import { MfcProvider } from "./provider/mfc";
 import { makeCustomProviders } from "./provider/custom";
 import type { UsageProvider } from "./provider/types";
 
@@ -15,7 +16,7 @@ const SEPARATOR_TEXT: Record<string, string> = {
 	dot: " · ",
 };
 
-const TEMPLATE_TOKEN_RE = /\{(glm|copilot|deepseek|custom:[^}]+)\}/g;
+const TEMPLATE_TOKEN_RE = /\{(glm|copilot|deepseek|mfc|custom:[^}]+)\}/g;
 
 export default class UsageHudPlugin extends Plugin {
 	settings!: UsageHudSettings;
@@ -61,6 +62,12 @@ export default class UsageHudPlugin extends Plugin {
 		this.settings.customProviders = this.settings.customProviders ?? [];
 		// schemaVersion 迁移：旧版配置补齐新字段并落盘一次
 		if (!raw?.schemaVersion || raw.schemaVersion < DEFAULT_SETTINGS.schemaVersion) {
+			// v4：pi-web 数据源默认地址（本机 pi-web 运行时端口）
+			if (!raw?.schemaVersion || raw.schemaVersion < 4) {
+				if (this.settings.piWebBase === "" && raw?.piWebBase === undefined) {
+					this.settings.piWebBase = "http://127.0.0.1:30141";
+				}
+			}
 			this.settings.schemaVersion = DEFAULT_SETTINGS.schemaVersion;
 			await this.saveData(this.settings);
 		}
@@ -74,6 +81,7 @@ export default class UsageHudPlugin extends Plugin {
 		this.providers = [
 			new GlmProvider(this.settings),
 			new CopilotProvider(this.settings),
+			new MfcProvider(this.settings),
 			new DeepSeekProvider(this.settings),
 			...makeCustomProviders(this.settings),
 		];

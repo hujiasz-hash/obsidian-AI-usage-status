@@ -39,13 +39,15 @@ export const SEPARATORS: Record<string, string> = {
 };
 
 export interface UsageHudSettings {
-	schemaVersion: number; // 3 = provider 框架 + 显示配置 + 自定义 API
+	schemaVersion: number; // 4 = pi-web 数据源 + MFC provider
 	glmHost: string;
 	glmApiKey: string;
 	dsApiKey: string;
 	ghUsername: string;
 	ghPat: string;
 	ghTier: string;
+	piWebBase: string; // pi-web 本地地址；Copilot 优先走它
+	mfcApiKey: string; // MFC API Key；留空时回退读 pi models.json 的 bosch-mfc
 	intervalMin: number;
 	dsWarnThreshold: number;
 	showInStatusBar: boolean;
@@ -56,20 +58,23 @@ export interface UsageHudSettings {
 	copilotMetric: string; // pct | remaining
 	showDs: boolean;
 	dsMetric: string; // balance | status
-	statusbarTemplate: string; // 占位符: {glm} {copilot} {deepseek} {custom:名称}
+	showMfc: boolean; // Bosch MFC 月度费用
+	statusbarTemplate: string; // 占位符: {glm} {copilot} {deepseek} {mfc} {custom:名称}
 	separator: string; // space | none | pipe | dot
 	// ── v0.2 自定义 API（PRD R3）──
 	customProviders: CustomProviderConfig[];
 }
 
 export const DEFAULT_SETTINGS: UsageHudSettings = {
-	schemaVersion: 3,
+	schemaVersion: 4,
 	glmHost: "https://open.bigmodel.cn",
 	glmApiKey: "",
 	dsApiKey: "",
 	ghUsername: "",
 	ghPat: "",
 	ghTier: "pro",
+	piWebBase: "",
+	mfcApiKey: "",
 	intervalMin: 5,
 	dsWarnThreshold: 10,
 	showInStatusBar: true,
@@ -79,6 +84,7 @@ export const DEFAULT_SETTINGS: UsageHudSettings = {
 	copilotMetric: "pct",
 	showDs: true,
 	dsMetric: "balance",
+	showMfc: true,
 	statusbarTemplate: "{glm} {copilot} {deepseek}",
 	separator: "space",
 	customProviders: [],
@@ -234,6 +240,29 @@ export class UsageHudSettingTab extends PluginSettingTab {
 					this.plugin.settings.copilotMetric = v;
 					await this.plugin.saveSettings();
 					this.plugin.renderStatusBar();
+				});
+			});
+
+		// ─────────────── Bosch MFC ───────────────
+		const mfcCard = this.card(containerEl, "Bosch MFC", "mfc");
+
+		this.row(mfcCard, "状态栏显示")
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.settings.showMfc).onChange(async (v) => {
+					this.plugin.settings.showMfc = v;
+					await this.plugin.saveSettings();
+					this.plugin.renderStatusBar();
+				});
+			});
+
+		this.row(mfcCard, "API Key", "aigc.bosch.com.cn 的 MFC API Key，只存本机；留空则回退读 pi models.json 里 bosch-mfc 的 apiKey")
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.inputEl.style.width = "100%";
+				text.setPlaceholder("留空读 pi models.json").setValue(this.plugin.settings.mfcApiKey).onChange(async (v) => {
+					this.plugin.settings.mfcApiKey = v.trim();
+					await this.plugin.saveSettings();
+					this.plugin.refresh();
 				});
 			});
 

@@ -34,6 +34,9 @@
 .uh-label-ds {
 	color: var(--color-purple, #a78bfa);
 }
+.uh-label-mfc {
+	color: var(--color-green, #22c55e);
+}
 .uh-good {
 	color: var(--text-success, #4caf50);
 }
@@ -189,6 +192,9 @@
 }
 .uh-accent-ds {
 	--uh-accent: var(--color-purple, #a78bfa);
+}
+.uh-accent-mfc {
+	--uh-accent: var(--color-green, #22c55e);
 }
 .uh-accent-format {
 	--uh-accent: var(--color-cyan, #06b6d4);
